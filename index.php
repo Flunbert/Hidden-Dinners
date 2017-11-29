@@ -7,8 +7,8 @@ dispatch_get('/', 'index');
 //Version 1 API calls
 dispatch_get('/api/v1/recipes', 'getRecipes');                                //Returnerar alla recept
 dispatch_get('/api/v1/recipes/id/:id','getRecipeById');                          //Returnerar recept med id :id
-dispatch_get('/api/v1/recipes/ingredients','getRecipeByIngredients');         //Returnera recept som innehåller ingredient, kräver ?ingredient[]=x
-dispatch_get('/api/v1/recipes/ingredients/:acc','getRecipeByIngsFilterAcc');  //Returnera recept som innehåller ingredient, kräver ?ingredient[]=x, :acc ger procentvärde
+dispatch_get('/api/v1/recipes/ingredients','getRecipesByIngredients');         //Returnera recept som innehåller ingredient, kräver ?ingredient[]=x
+dispatch_get('/api/v1/recipes/ingredients/:acc','getRecipesByIngsFilterAcc');  //Returnera recept som innehåller ingredient, kräver ?ingredient[]=x, :acc ger procentvärde
 dispatch_get('/api/v1/ingredients','getIngredients');                         //Returnerar alla ingredienser
 dispatch_post('/api/v1/recipes','createRecipe');                              //Skapa nytt recept, kräver headers
 dispatch_post('/api/v1/ingredients','createIngredient');                      //Skapa ny ingrediens, kräver headers
@@ -63,54 +63,28 @@ function getRecipeById($id)
     echo json_encode($message);
   }else
   {
-    $sql = "SELECT * FROM recipe WHERE recipe_id=".$id;
-    $sqlResult = mysqli_query($conn, $sql);
-    if($sqlResult && $sqlResult->num_rows > 0)
-    {
-      while($row = mysqli_fetch_assoc($sqlResult))
-      {
-        $message = new stdClass();
-        $message->id = $row["recipe_id"];
-        $message->Name = $row["name"];
-        echo json_encode($message);
-      }
-      http_response_code(200);
-    }else
-    {
-      $message = new stdClass();
-      $message->info = "Not found";
-      http_response_code(404);
-      echo json_encode($message);
-    }
-  }
-}
-function getRecipeByIngredients()
-{
-  global $serverName, $userName, $password, $dbName;
-  $ingredients = $_GET["ingredient"];
-  $conn = new mysqli($serverName,$userName,$password,$dbName);
-  if($conn->connect_error)
-  {
-    $message = new stdClass();
-    $message->info = $conn->connect_error;
-    http_response_code(500);
-    echo json_encode($message);
-  }else
-  {
-    $sql = "SELECT r.instructions rName,i.name iName,c.amount amount
-            FROM combination_table c
-            JOIN recipe r ON c.recipe_id=r.recipe_id
-            JOIN ingredient i ON c.ingredient_id=i.ingredient_id";
+    $conn->set_charset("utf8");
+    $sql = "SELECT r.instructions rInstructions, r.name rName,i.name iName,c.amount amount
+    FROM combination_table c
+    JOIN recipe r ON c.recipe_id=r.recipe_id
+    JOIN ingredient i ON c.ingredient_id=i.ingredient_id
+    WHERE r.recipe_id=".$id;
     $sqlResult = mysqli_query($conn, $sql);
     if($sqlResult && $sqlResult->num_rows > 0)
     {
       $result = new ArrayObject();
+      $setInstr = true;
       while($row = mysqli_fetch_assoc($sqlResult))
       {
+        if($setInstr)
+        {
+          $result['recipeName'] = $row["rName"];
+          $result['instructions'] = $row["rInstructions"];
+          $setInstr = false;
+        }
         $message = new stdClass();
-        $message->rName = utf8_encode($row["rName"]);
-        $message->iName = utf8_encode($row["iName"]);
-        $message->amount = utf8_encode($row["amount"]);
+        $message->iName = $row["iName"];
+        $message->amount = $row["amount"];
         $result['ingredients'][] = $message;
       }
       http_response_code(200);
@@ -124,7 +98,11 @@ function getRecipeByIngredients()
     }
   }
 }
-function getRecipeByIngsFilterAcc($acc)
+function getRecipesByIngredients()
+{
+  getRecipesByIngsFilterAcc(0);
+}
+function getRecipesByIngsFilterAcc($acc)
 {
   global $serverName, $userName, $password, $dbName;
   $ingredients = $_GET["ingredient"];
@@ -137,22 +115,31 @@ function getRecipeByIngsFilterAcc($acc)
     echo json_encode($message);
   }else
   {
-    $sql = "SELECT r.instructions rName,i.name iName,c.amount amount
-            FROM combination_table c
-            JOIN recipe r ON c.recipe_id=r.recipe_id
-            JOIN ingredient i ON c.ingredient_id=i.ingredient_id";
+    $conn->set_charset("utf8");
+    $sql = "SELECT DISTINCT r.recipe_id rId, r.name rName
+    FROM combination_table c
+    JOIN recipe r ON c.recipe_id=r.recipe_id
+    JOIN ingredient i ON c.ingredient_id=i.ingredient_id";
+    $sql .= " WHERE";
+    foreach($ingredients as $index => $ing) {
+      if($index == 0)
+      {
+        $sql .= " i.name='".$ing."'";
+      }else
+      {
+        $sql .= " OR i.name='".$ing."'";
+      }
+    }
     $sqlResult = mysqli_query($conn, $sql);
     if($sqlResult && $sqlResult->num_rows > 0)
     {
       $result = new ArrayObject();
-      $result['acc'] = $acc;
       while($row = mysqli_fetch_assoc($sqlResult))
       {
         $message = new stdClass();
-        $message->rName = utf8_encode($row["rName"]);
-        $message->iName = utf8_encode($row["iName"]);
-        $message->amount = utf8_encode($row["amount"]);
-        $result['ingredients'][] = $message;
+        $message->id = $row["rId"];
+        $message->name = $row["rName"];
+        $result['recipes'][] = $message;
       }
       http_response_code(200);
       echo json_encode($result);
@@ -203,7 +190,38 @@ function getIngredients()
 //POST methods
 function createRecipe()
 {
-
+  global $serverName, $userName, $password, $dbName;
+  $conn = new mysqli($serverName,$userName,$password,$dbName);
+  echo json_encode($_POST["m"]);
+  echo json_encode($_POST["n"]);
+  if($conn->connect_error)
+  {
+    $message = new stdClass();
+    $message->info = $conn->connect_error;
+    http_response_code(500);
+    echo json_encode($message);
+  }else
+  {
+    $sql = "SELECT * FROM recipe WHERE name=".$rName;
+    $sqlResult = mysqli_query($conn, $sql);
+    if($sqlResult && $sqlResult->num_rows > 0)
+    {
+      while($row = mysqli_fetch_assoc($sqlResult))
+      {
+        $message = new stdClass();
+        $message->id = utf8_encode($row["recipe_id"]);
+        $message->name = utf8_encode($row["name"]);
+      }
+      http_response_code(200);
+      echo json_encode($message);
+    }else
+    {
+      $message = new stdClass();
+      $message->info = "Not found";
+      http_response_code(404);
+      echo json_encode($message);
+    }
+  }
 }
 function createIngredient()
 {
