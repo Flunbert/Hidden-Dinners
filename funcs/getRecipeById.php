@@ -12,7 +12,7 @@ function getRecipeById($id)
       echo json_encode($message);
    }else
    {
-      $sql = 'SELECT r.instructions rInstructions, r.name rName,i.name iName,c.amount amount
+      $sql = 'SELECT r.instructions rInstructions, r.name rName, i.name iName, i.measurement iMeasure, c.amount amount
       FROM combination_table c
       JOIN recipe r ON c.recipe_id=r.recipe_id
       JOIN ingredient i ON c.ingredient_id=i.ingredient_id
@@ -38,8 +38,9 @@ function getRecipeById($id)
                $setInstr = false;
             }
             $message = new stdClass();
-            $message->iName = $row["iName"];
+            $message->ingredient = $row["iName"];
             $message->amount = $row["amount"];
+            $message->measurement = $row["iMeasure"];
             $result['ingredients'][] = $message;
          }
          http_response_code(200);

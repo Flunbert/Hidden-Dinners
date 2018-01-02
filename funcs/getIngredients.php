@@ -27,6 +27,7 @@ function getIngredients()
             $message = new stdClass();
             $message->id = $row["ingredient_id"];
             $message->name = $row["name"];
+            $message->measurement = $row["measurement"];
             $result['ingredients'][] = $message;
          }
          http_response_code(200);

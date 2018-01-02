@@ -31,11 +31,12 @@ function createIngredient()
          }else
          {
             $qName = $_POST["name"];
-            $sql = "INSERT INTO ingredient(name) VALUES(?)";
+            $qMeasure = $_POST["measurement"];
+            $sql = "INSERT INTO ingredient(name, measurement) VALUES(?,?)";
             if(!($stmt = $conn->prepare($sql)))
             {
                //Error
-            }else if(!($stmt->bind_param('s', $qName)))
+            }else if(!($stmt->bind_param('ss', $qName, $qMeasure)))
             {
                //Error
             }else if(($stmt->execute()))
