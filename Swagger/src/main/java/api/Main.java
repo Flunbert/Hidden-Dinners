@@ -13,7 +13,7 @@ import static spark.Spark.before;
 import static spark.Spark.get;
 import static spark.SparkBase.port;
 
-@SwaggerDefinition(host = "localhost:5000",
+@SwaggerDefinition(host = "localhost:8000",
         info = @Info(description = "Projekt för Självfördjupande Datavetenskap",
                 version = "V1.0",
                 title = "Hidden Dinners API"),

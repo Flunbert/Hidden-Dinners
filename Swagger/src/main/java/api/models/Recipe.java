@@ -3,7 +3,6 @@ package api.models;
 public class Recipe {
     private int recipe_id;
     private String name;
-    private String instructions;
 
     public int getRecipe_id() {
         return recipe_id;
@@ -19,13 +18,5 @@ public class Recipe {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getInstructions() {
-        return instructions;
-    }
-
-    public void setInstructions(String instructions) {
-        this.instructions = instructions;
     }
 }

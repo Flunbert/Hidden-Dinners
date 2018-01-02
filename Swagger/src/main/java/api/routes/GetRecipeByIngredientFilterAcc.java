@@ -1,5 +1,6 @@
 package api.routes;
 
+import api.models.RecipeListWithIngredients;
 import io.swagger.annotations.*;
 import api.models.RecipeList;
 import spark.Response;
@@ -18,6 +19,7 @@ public class GetRecipeByIngredientFilterAcc implements Route {
     @GET
     @ApiOperation(value = "Get recipes that matches ingredients and filters by accuracy", nickname = "GetRecipeByIngredientFilterAcc")
     @ApiImplicitParams({
+            @ApiImplicitParam(required = false, dataType = "integer", name = "id", paramType = "path"),
             @ApiImplicitParam(required = true, dataType = "integer", name = "acc", paramType = "path"),
             @ApiImplicitParam(required = true, dataType = "string", name = "ingredient[]", paramType = "query")
     })
