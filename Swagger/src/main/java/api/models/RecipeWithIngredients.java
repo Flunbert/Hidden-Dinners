@@ -42,7 +42,7 @@ public class RecipeWithIngredients {
 
     private class RecipeIngredient {
         private String ingredient;
-        private int amount;
+        private float amount;
         private String measurement;
 
         public String getIngredient() {
@@ -53,7 +53,7 @@ public class RecipeWithIngredients {
             this.ingredient = ingredient;
         }
 
-        public int getAmount() {
+        public float getAmount() {
             return amount;
         }
 
